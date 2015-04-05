@@ -1,13 +1,5 @@
 package com.luxvelocitas.jnigen;
 
-import java.io.*;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.*;
-
 import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
@@ -16,18 +8,28 @@ import com.github.jknack.handlebars.context.JavaBeanValueResolver;
 import com.github.jknack.handlebars.context.MapValueResolver;
 import com.github.jknack.handlebars.io.FileTemplateLoader;
 import com.github.jknack.handlebars.io.TemplateLoader;
-import org.objectweb.asm.Type;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.objectweb.asm.Type;
+
+import java.io.*;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- *
+ * Generate JNI native code objects to call
+ * Java methods marked with the @NativeCallable annotation
  */
 public class JNIGen {
-    public static enum OutputType { C, CXX };
-
     public static final String USAGE = "JNIGen [options] <classes>";
     private static final String TEMPLATE_DIR = "templates";
     private static final String INCLUDE_DIR = "include";
@@ -238,8 +240,10 @@ public class JNIGen {
     @Option(name="-h",usage="help")
     private boolean mShowHelp = false;
 
+    /*
     @Option(name="-v",usage="verbose")
     private boolean mVerbose = false;
+    */
 
     @Option(name="-d",usage="output directory",metaVar="<dir>")
     private File mOutDirC = new File(".");
@@ -340,8 +344,6 @@ public class JNIGen {
         List<Method> methodCache = new ArrayList<Method>();
 
         for (String s : mArguments) {
-            System.out.println("JNIGen: " + s);
-
             try {
                 Class c = classLoader.loadClass(s);
 
@@ -358,8 +360,8 @@ public class JNIGen {
                     }
                 }
 
+                System.out.println(c.getName() + ": Found " + methodCache.size() + " NativeCallable method(s)");
                 if (!methodCache.isEmpty()) {
-                    System.out.println("Found " + methodCache.size() + " NativeCallable method(s) for: " + c.getName());
 
                     Context context = createTemplateContext(c, methodCache);
 
@@ -431,15 +433,13 @@ public class JNIGen {
         model.put("h_ext", "h");
         model.put("c_ext", "cpp");
 
-        Context context = Context
+        return Context
                 .newBuilder(model)
                 .resolver(
                         MapValueResolver.INSTANCE,
                         JavaBeanValueResolver.INSTANCE,
                         FieldValueResolver.INSTANCE
                 ).build();
-
-        return context;
     }
 
     private void mangleMethods(List<MethodContext> methodContexts) {
@@ -467,7 +467,7 @@ public class JNIGen {
     }
 
     private String getMangle(String methodName, List<ParameterContext> parameterTypes, Map<String, Integer> mangleCountMap) {
-        StringBuffer ret = new StringBuffer("_");
+        StringBuilder ret = new StringBuilder("_");
         for (ParameterContext pc : parameterTypes) {
             ret.append(JNIGen.mapMangleType(pc.toString));
         }
