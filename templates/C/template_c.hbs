@@ -2,7 +2,7 @@
 
 #include "{{fname}}.h"
 #include "{{fname}}_extern.h"
-#include "JavaApplication.h"
+#include "CHybridApplication.h"
 #include "jni_util.h"
 
 #ifdef __cplusplus
@@ -11,9 +11,9 @@ extern "C" {
 
 {{#each methods}}
 /* {{.}} */
-{{returnTypeMapped}} {{iname}}_{{name}}{{mangle}}({{#unless isStatic}}jobject thiz{{/unless}}{{#each parameterTypes}}{{#unless isStatic}},{{else}}{{^@first}},{{/first}}{{/unless}}{{typeMapped}} p{{@index}}{{/each}})
+{{returnTypeMapped}} {{iname}}_{{name}}{{mangle}}({{#unless isStatic}}const jobject thiz{{/unless}}{{#each parameterTypes}}{{#unless isStatic}},{{else}}{{^@first}},{{/first}}{{/unless}}{{typeMapped}} p{{@index}}{{/each}})
 {
-    {{iname}} *moduleInstance = static_cast<{{iname}}*>(JavaApplication::getInstance().getInstanceOfModule("{{iname}}"));
+    {{iname}} *moduleInstance = static_cast<{{iname}}*>(CHybridApplication::getInstance().getInstanceOfModule("{{iname}}"));
 
     {{#unless isVoid}}return{{/unless}}
     moduleInstance->{{name}}({{#unless isStatic}}thiz{{/unless}}{{#each parameterTypes}}{{#unless isStatic}},{{else}}{{^@first}},{{/first}}{{/unless}}p{{@index}}{{/each}});

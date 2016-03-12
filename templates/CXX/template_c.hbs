@@ -2,7 +2,7 @@
 
 #include "{{fname}}.h"
 #include "jni_util.h"
-#include "JavaApplication.h"
+#include "CHybridApplication.h"
 
 
 {{iname}}::{{iname}}(JavaVM *vm)
@@ -16,7 +16,7 @@
 
 {{#each methods}}
 /* {{.}} */
-{{returnTypeMapped}} {{iname}}::{{name}}({{#unless isStatic}}jobject thiz{{/unless}}{{#each parameterTypes}}{{#unless isStatic}},{{else}}{{^@first}},{{/first}}{{/unless}}{{typeMapped}} p{{@index}}{{/each}})
+{{returnTypeMapped}} {{iname}}::{{name}}({{#unless isStatic}}const jobject thiz{{/unless}}{{#each parameterTypes}}{{#unless isStatic}},{{else}}{{^@first}},{{/first}}{{/unless}}{{typeMapped}} p{{@index}}{{/each}})
 {
     if (!mJavaVM) {
         LOGE("{{name}}: failed: no mJavaVM");
@@ -37,9 +37,10 @@
         }
     }
 
-    jclass localClass = JavaApplication::getInstance().findClass(env, "{{classPath}}");
+    jclass localClass = CHybridApplication::getInstance().findClass(env, "{{classPath}}");
     if (!localClass) {
         LOGE("{{name}}: failed to get class for {{classPath}}");
+        mJavaVM->DetachCurrentThread();
         HANDLE_EXCEPTION(env);
         {{#if isVoid}}return{{else}}return {{returnTypeIdentityValue}}{{/if}};
     }
@@ -54,6 +55,7 @@
                                 "{{JNISignature}}");
     if (!localMethodID) {
         LOGE("{{name}}: failed to get methodID");
+        mJavaVM->DetachCurrentThread();
         HANDLE_EXCEPTION(env);
         {{#if isVoid}}return{{else}}return {{returnTypeIdentityValue}}{{/if}};
     }
@@ -63,7 +65,7 @@
     jstring js_p{{@index}} = env->NewStringUTF(p{{@index}});
     {{/if}}{{/each}}
 
-    {{#unless isVoid}}return{{/unless}}
+    {{#unless isVoid}}{{returnTypeMapped}} ret = {{/unless}}
     {{#if returnTypeIsString }}static_cast<jstring>({{/if}}
     {{#if isStatic}}
     env->{{callMethod}}(localClass, localMethodID
@@ -76,6 +78,14 @@
     )
     {{#if returnTypeIsString }}){{/if}}
     ;
+
+    {{#each parameterTypes}}
+    {{#if isString}}env->DeleteLocalRef(js_p{{@index}});
+    {{else}}{{#if isObject}}env->DeleteLocalRef(p{{@index}});{{/if}}
+    {{/if}}
+    {{/each}}
+
+    {{#unless isVoid}}return ret;{{/unless}}
 }
 {{/each}}
 

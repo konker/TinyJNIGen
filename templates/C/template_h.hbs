@@ -11,7 +11,7 @@ extern "C" {
 
 {{#each methods}}
 /* {{.}} */
-{{returnTypeMapped}} {{iname}}_{{name}}{{mangle}}({{#unless isStatic}}jobject thiz{{/unless}}{{#each parameterTypes}}{{#unless isStatic}},{{else}}{{^@first}},{{/first}}{{/unless}}{{typeMapped}} p{{@index}}{{/each}});
+{{returnTypeMapped}} {{iname}}_{{name}}{{mangle}}({{#unless isStatic}}const jobject thiz{{/unless}}{{#each parameterTypes}}{{#unless isStatic}},{{else}}{{^@first}},{{/first}}{{/unless}}{{typeMapped}} p{{@index}}{{/each}});
 {{/each}}
 
 #ifdef __cplusplus

@@ -17,7 +17,7 @@ public:
 
 {{#each methods}}
     /* {{.}} */
-    {{returnTypeMapped}} {{name}}({{#unless isStatic}}jobject thiz{{/unless}}{{#each parameterTypes}}{{#unless isStatic}},{{else}}{{^@first}},{{/first}}{{/unless}}{{typeMapped}} p{{@index}}{{/each}});
+    {{returnTypeMapped}} {{name}}({{#unless isStatic}}const jobject thiz{{/unless}}{{#each parameterTypes}}{{#unless isStatic}},{{else}}{{^@first}},{{/first}}{{/unless}}{{typeMapped}} p{{@index}}{{/each}});
 {{/each}}
 
 private:

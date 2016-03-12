@@ -237,6 +237,10 @@ public class JNIGen {
         throw new RuntimeException("Could not resolve static call method for type: " + t);
     }
 
+    private static boolean isObject(String typeMapped) {
+        return (typeMapped.equals("jstring") || typeMapped.equals("jobject"));
+    }
+
     @Option(name="-h",usage="help")
     private boolean mShowHelp = false;
 
@@ -417,6 +421,7 @@ public class JNIGen {
                 pc.typeMapped = JNIGen.mapType(pc.type.toString());
                 pc.toString = p.toString();
                 pc.isString = pc.type.toString().contains("java.lang.String");
+                pc.isObject = JNIGen.isObject(pc.typeMapped);
 
                 mc.parameterTypes.add(pc);
             }
